@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { fetchPhotos } from './api';
 import { Searchbar } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
 import { Loader } from './Loader';
 import { Button } from './Button';
 import { Modal } from './Modal';
-
-const API_KEY = '42459291-7f50c47c6b19e5b61fce58d70';
 
 export const App = () => {
   const [query, setQuery] = useState('');
@@ -20,21 +18,23 @@ export const App = () => {
   useEffect(() => {
     if (query === '') return;
 
-    const fetchPhotos = async () => {
+    const fetchData = async () => {
       setLoader(true);
       try {
-        const response = await axios.get(
-          `https://pixabay.com/api/?q=${query}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
-        );
-        setImages(prevImages => [...prevImages, ...response.data.hits]);
-        setTotalHits(response.data.totalHits);
+        const data = await fetchPhotos(query, page);
+        if (page === 1) {
+          setImages(data.hits);
+          setTotalHits(data.totalHits);
+        } else {
+          setImages(prevImages => [...prevImages, ...data.hits]);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
       setLoader(false);
     };
 
-    fetchPhotos();
+    fetchData();
   }, [query, page]);
 
   const handleSearch = searchQuery => {
